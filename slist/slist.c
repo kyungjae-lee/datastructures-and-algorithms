@@ -48,7 +48,7 @@ struct slist_t
  * @return Pointer to the created list, or NULL if memory allocation fails.
  * @note Time complexity: O(1)
  * @note The caller owns the returned object, and is responsible for destroying
- *       it by calling slist_destroy().
+ * it by calling slist_destroy().
  */
 slist_t* slist_create(void)
 {

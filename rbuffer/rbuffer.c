@@ -38,28 +38,43 @@ struct rbuffer_t
 /* Public API definitions ----------------------------------------------------*/
 
 /*!
- * @brief Initializes a ring buffer instance.
- * @param[in,out] p_rb Pointer to ring buffer control structure.
- * @param[in] p_buf Pointer to user-provided storage array.
- * @param[in] capacity Capacity of the storage array in bytes.
- * @return true If initialization was successful.
- * @return false If initialization failed. (Invalid parameters.)
+ * @brief Creates and initializes a ring buffer.
+ * @param[in] capacity Maximum number of elements the ring buffer can store.
+ * @return Pointer to the created ring buffer control structure, or NULL if 
+ * capacity is less than 1 or if any memory allocation fails.
  * @note Time complexity: O(1)
+ * @note The caller owns the returned object, and is responsible for destroying
+ * it by calling rbuffer_destroy().
  */
-bool rbuffer_init(rbuffer_t *p_rb, uint8_t *p_buf, uint32_t capacity)
+rbuffer_t* rbuffer_create(uint32_t capacity)
 {
-    if (NULL == p_rb || NULL == p_buf || 0 == capacity)
+    if (capacity < 1)
     {
-        return false;
+        return NULL;
     }
 
-    p_rb->p_buf = p_buf;
+    /* Allocate memory a ring buffer. */
+    rbuffer_t *p_rb = malloc(sizeof(rbuffer_t));
+    if (NULL == p_rb)
+    {
+        /* Memory allocation failed. */
+        return NULL;
+    }
+
+    /* Initialize the ring buffer to an empty state. */
+    p_rb->p_buf = malloc(capacity * sizeof(uint8_t));
+    if (NULL == p_rb->p_buf)
+    {
+        free(p_rb);
+        return NULL;
+    }
     p_rb->capacity = capacity;
     p_rb->ridx = 0;
     p_rb->widx = 0;
+    p_rb->b_is_full = false;
 
-    return true;
-} /* End of rbuffer_init() */
+    return p_rb;
+} /* End of rbuffer_create() */
 
 /*!
  * @brief Reads and removes oldest data from the ring buffer.
@@ -261,3 +276,24 @@ bool rbuffer_clear(rbuffer_t *p_rb)
 
     return true;
 } /* End of rbuffer_clear() */
+
+/*!
+ * @brief Destroys a ring buffer instance and releases all associated
+ * resources. 
+ * @param[in] p_rb Pointer to the ring buffer control structure.
+ * @note Time complexity: O(1)
+ * @note It is safe to call this function with a NULL pointer.
+ * @note After this function returns, the pointer must not be used gain.
+ */
+void rbuffer_destroy(rbuffer_t *p_rb)
+{
+    if (NULL == p_rb)
+    {
+        return;
+    }
+
+    free(p_rb->p_buf);
+    free(p_rb);
+} /* End of rbuffer_destroy() */
+
+/*** End of file: rbuffer.c */

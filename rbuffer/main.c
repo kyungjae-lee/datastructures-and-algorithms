@@ -10,8 +10,16 @@
 #include <stdio.h>
 #include "rbuffer.h"
 
+#define BUFFER_SIZE (8)
+
 int main(int argc, char *argv[])
 {
+    rbuffer_t *rb = rbuffer_create(BUFFER_SIZE);
+    
+    /* TBD */
+    
+    rbuffer_destroy(rb);
+
     return 0;
 } /* End of main() */
 
