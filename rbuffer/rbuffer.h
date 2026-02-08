@@ -24,14 +24,15 @@ typedef struct rbuffer_t rbuffer_t;
 /* Public APIs ---------------------------------------------------------------*/
 
 rbuffer_t* rbuffer_create(uint32_t capacity);
-bool rbuffer_read(rbuffer_t *p_rb, uint8_t *p_data);
-bool rbuffer_write(rbuffer_t *p_rb, uint8_t data);
+bool rbuffer_read(rbuffer_t *p_rb, int32_t *p_data);
+bool rbuffer_write(rbuffer_t *p_rb, int32_t data);
 uint32_t rbuffer_data_count(const rbuffer_t *p_rb);
 uint32_t rbuffer_free_count(const rbuffer_t *p_rb);
 bool rbuffer_is_empty(const rbuffer_t *p_rb);
 bool rbuffer_is_full(const rbuffer_t *p_rb);
 bool rbuffer_clear(rbuffer_t *p_rb);
 void rbuffer_destroy(rbuffer_t *p_rb);
+void rbuffer_display(const rbuffer_t *p_rb);
 
 #endif /* RBUFFER_H */
 

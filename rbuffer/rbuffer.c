@@ -28,7 +28,7 @@
  */
 struct rbuffer_t
 {
-    uint8_t *p_buf;
+    int32_t *p_buf;
     uint32_t capacity;
     uint32_t ridx;   /* Read index. */
     uint32_t widx;   /* Write index. */
@@ -62,7 +62,7 @@ rbuffer_t* rbuffer_create(uint32_t capacity)
     }
 
     /* Initialize the ring buffer to an empty state. */
-    p_rb->p_buf = malloc(capacity * sizeof(uint8_t));
+    p_rb->p_buf = malloc(capacity * sizeof(int32_t));
     if (NULL == p_rb->p_buf)
     {
         free(p_rb);
@@ -84,7 +84,7 @@ rbuffer_t* rbuffer_create(uint32_t capacity)
  * @return false If the buffer is empty, or p_rb is NULL, or p_data is NULL.
  * @note Time complexity: O(1)
  */
-bool rbuffer_read(rbuffer_t *p_rb, uint8_t *p_data)
+bool rbuffer_read(rbuffer_t *p_rb, int32_t *p_data)
 {
     if (NULL == p_rb || NULL == p_data)
     {
@@ -125,7 +125,7 @@ bool rbuffer_read(rbuffer_t *p_rb, uint8_t *p_data)
  * @return false If p_rb is NULL.
  * @note Time complexity: O(1)
  */
-bool rbuffer_write(rbuffer_t *p_rb, uint8_t data)
+bool rbuffer_write(rbuffer_t *p_rb, int32_t data)
 {
     if (NULL == p_rb)
     {
@@ -295,5 +295,44 @@ void rbuffer_destroy(rbuffer_t *p_rb)
     free(p_rb->p_buf);
     free(p_rb);
 } /* End of rbuffer_destroy() */
+
+/*!
+ * @brief Displays all data in the ring buffer.
+ * @param[in] p_rb Pointer to the ring buffer control structure.
+ * @note Time complexity: O(n), where n is the number of data in the ring buffer.
+ * @note This function does not modify any internal indices of the ring buffer
+ * and performs a non-destructive traversal.
+ */
+void rbuffer_display(const rbuffer_t *p_rb)
+{
+    if (NULL == p_rb)
+    {
+        return;
+    }
+
+    if ((p_rb->widx == p_rb->ridx) && !p_rb->b_is_full)
+    {
+        /* Buffer is empty. */
+        printf("\n");
+        return;
+    }
+
+    uint32_t idx = p_rb->ridx; 
+    uint32_t count = rbuffer_data_count(p_rb);
+
+    for (uint32_t i = 0; i < count; i++)
+    {
+        printf("%d ", p_rb->p_buf[idx]);
+
+        idx++;
+        if (idx >= p_rb->capacity)
+        {
+            idx = 0;
+        }
+    }
+
+    printf("\n");
+} /* End of rbuffer_display() */
+
 
 /*** End of file: rbuffer.c */
