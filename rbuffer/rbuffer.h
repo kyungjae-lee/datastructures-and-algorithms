@@ -7,7 +7,7 @@
  * @author  Kyungjae Lee
  * @date    Feb 07, 2026
  * @note    The internal data structures are opaque to users to prevent
- *          accidental violation of list invariants.
+ *          accidental violation of ring buffer invariants.
  * 
  ******************************************************************************/
 
