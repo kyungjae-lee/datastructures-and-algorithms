@@ -5,7 +5,7 @@
  * @details This module provides an opaque ring buffer implementation.
  *          Users must interact with the list only through the provided APIs.
  * @author  Kyungjae Lee
- * @date    Jan 24, 2026
+ * @date    Feb 07, 2026
  * @note    The internal data structures are opaque to users to prevent
  *          accidental violation of list invariants.
  * 

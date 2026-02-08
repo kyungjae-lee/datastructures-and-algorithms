@@ -3,7 +3,7 @@
  * @file    rbuffer.c
  * @brief   Implementation of a ring buffer.
  * @author  Kyungjae Lee
- * @date    Tue 07, 2026
+ * @date    Feb 07, 2026
  * @note    The definitions of rbuffer_t is intentionally kept private to this
  *          source file to enforce encapsulation. Users of this module interact
  *          with the list only through the public API and cannot access or
