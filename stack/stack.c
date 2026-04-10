@@ -11,14 +11,14 @@
  * 
  ******************************************************************************/
 
-#include "slist.h"
+#include "stack.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 /* Private data types --------------------------------------------------------*/
 
 /*!
- * @brief Structure representing a node in a singly linked list.
+ * @brief Structure representing a node in a stack.
  * @note This structure is internal to the implementation and must not be
  * accessed directly by users of the API.
  */
@@ -29,301 +29,194 @@ typedef struct stack_node_t
 } stack_node_t;
 
 /*!
- * @brief Structure representing a singly linked list.
+ * @brief Structure representing a stack.
  * @note This structure is opaque to users of the API. The full definition is
  * hidden to prevent direct access to internal members and to preserve list
  * invariants.
  */
-struct slist_t
+struct stack_t
 {
-   slist_node_t *p_head;
-   slist_node_t *p_tail; /* Enables O(1) push_back(). */
-   unsigned int size;
+   stack_node_t *p_tos; /* Top-of-stack. */
+   size_t size;
 };
 
 /* Public API definitions ----------------------------------------------------*/
 
 /*!
- * @brief Creates and initializes a singly linked list.
- * @return Pointer to the created list, or NULL if memory allocation fails.
+ * @brief Creates and initializes an empty stack.
+ * @return Pointer to newly created stack, or NULL on allocation failure.
  * @note Time complexity: O(1)
  * @note The caller owns the returned object, and is responsible for destroying
  * it by calling slist_destroy().
  */
-slist_t* slist_create(void)
+stack_t* stack_create(void)
 {
-    /* Allocate memory for a singly linked list. */
-    slist_t *p_list = malloc(sizeof(slist_t));
-    if (NULL == p_list)
-    {
-        /* Memory allocation failed. */
-        return NULL;
-    }
+	stack_t *p_stack = malloc(sizeof(stack_t));
+	if (NULL == p_stack)
+	{
+		return NULL;
+	}
 
-    /* Initialize the list to an empty state. */
-    p_list->p_head = NULL;
-    p_list->p_tail = NULL;
-    p_list->size = 0;
+	p_stack->p_tos = NULL;
+	p_stack->size = 0;
 
-    return p_list;
-} /* End of slist_create() */
+	return p_stack;
+}
 
 /*!
- * @brief Destroys a singly linked list and frees all associated memory.
- * @param[in] p_list Pointer to the singly linked list.
- * @return true If the list was destroyed.
- * @return false If p_list is NULL.
+ * @brief Destroys a stack and frees all allocated memory.
+ * @param[in] p_stack Pointer to stack object.
+ * @return STACK_OK on success, error codes otherwise.
  * @note Time complexity: O(n), where n is the number of nodes.
  */
-bool slist_destroy(slist_t *p_list)
+stack_status_t stack_destroy(stack_t *p_stack)
 {
-    if (NULL == p_list)
-    {
-        return false;
-    }
+	if (NULL == p_stack)
+	{
+		return STACK_ERR_NULL;
+	}
 
-    slist_clear(p_list);
-    free(p_list);
+	while (p_stack->p_tos != NULL)
+	{
+		stack_node_t *p_temp = p_stack->p_tos;
+		p_stack->p_tos = p_temp->p_next;
+		free(p_temp);
+	}
 
-    return true;
-} /* End of slist_destroy() */
+	free(p_stack);
+
+	return STACK_OK;
+}
 
 /*!
- * @brief Adds a node to the head of the list.
- * @param[in,out] p_list Pointer to the singly linked list.
- * @param[in] data Data to add.
- * @return true If the addition was successful.
- * @return false If p_list is NULL or memory allocation fails.
+ * @brief Pushes a node onto the stack.
+ * @param[in] p_stack Pointer to stack object.
+ * @param[in] data Data to push.
+ * @return STACK_OK on success, error codes otherwise.
  * @note Time complexity: O(1)
  */
-bool slist_add_to_head(slist_t *p_list, int data)
+stack_status_t stack_push(stack_t *p_stack, const int data)
 {
-    if (NULL == p_list)
-    {
-        return false;
-    }    
+	if (NULL == p_stack)
+	{
+		return STACK_ERR_NULL;
+	}
 
-    /* Create a node. */
-    slist_node_t *p_new = malloc(sizeof(slist_node_t));
-    if (NULL == p_new)
-    {
-        /* Memory allocation failed. */
-        return false;
-    }
-    p_new->data = data;
-    p_new->p_next = NULL;
+	stack_node_t *p_new = malloc(sizeof(stack_node_t));
+	if (NULL == p_new)
+	{
+		return STACK_ERR_MALLOC;
+	}
+	p_new->data = data;
 
-    /* Add the new node to the head of the list. */
-    if (0 == p_list->size)
-    {
-        /* Empty list. */
-        p_list->p_head = p_new;
-        p_list->p_tail = p_new;
-    }
-    else
-    {
-        /* Non-empty list. */
-        p_new->p_next = p_list->p_head;
-        p_list->p_head = p_new; 
-    }
-
-    p_list->size++;
-
-    return true;
-} /* End of slist_add_to_head() */
+	p_new->p_next = p_stack->p_tos;
+	p_stack->p_tos = p_new;
+	p_stack->size++;
+	
+	return STACK_OK;
+}
 
 /*!
- * @brief Adds a node to the tail of the list.
- * @param[in,out] p_list Pointer to the singly linked list.
- * @param[in] data Data to add.
- * @return true If the addition was successful.
- * @return false If p_list is NULL or memory allocation fails.
+ * @brief Pops the top node of the stack.
+ * @param[in] p_stack Pointer to stack object.
+ * @param[out] p_data Optional pointer to store popped value (can be NULL).
+ * @return STACK_OK on success, error codes otherwise.
  * @note Time complexity: O(1)
  */
-bool slist_add_to_tail(slist_t *p_list, int data)
+stack_status_t stack_pop(stack_t *p_stack, int *p_data)
 {
-    if (NULL == p_list)
-    {
-        return false;
-    }
+	if (NULL == p_stack)
+	{
+		return STACK_ERR_NULL;
+	}
 
-    /* Create a new node. */
-    slist_node_t *p_new = malloc(sizeof(slist_node_t));
-    if (NULL == p_new)
-    {
-        /* Memory allocation failed. */
-        return false;
-    }
-    p_new->data = data;
-    p_new->p_next = NULL;
+	if (0 == p_stack->size)
+	{
+		return STACK_ERR_EMPTY;
+	}
 
-    /* Add the new node to tail of the list. */    
-    if (0 == p_list->size)
-    {
-        p_list->p_head = p_new;
-        p_list->p_tail = p_new;
-    }
-    else
-    {
-        p_list->p_tail->p_next = p_new;
-        p_list->p_tail = p_new; 
-    }
+	if (p_data != NULL)
+	{
+		*p_data = p_stack->p_tos->data;
+	}
 
-    p_list->size++;
+	stack_node_t *p_temp = p_stack->p_tos;
+	p_stack->p_tos = p_stack->p_tos->p_next;
+	free(p_temp);
+	p_stack->size--;
 
-    return true;
-} /* End of slist_add_to_tail() */
+	return STACK_OK;
+}
 
 /*!
- * @brief Returns the data at the head of the list without removing it.
- * @param[in] p_list Pointer to the singly linked list.
- * @param[out] p_data Pointer to store the data at the head.
- * @return true If the peek was successful.
- * @return false If p_list is NULL or p_data is NULL, or the list is empty.
+ * @brief Retrieves (without removing) the top node of the stack.
+ * @param[in] p_stack Pointer to stack object.
+ * @param[out] p_data Pointer to store top node.
+ * @return STACK_OK on success, error codes otherwise.
  * @note Time complexity: O(1)
  */
-bool slist_peek_head(const slist_t *p_list, int *p_data)
+stack_status_t stack_peek(const stack_t *p_stack, int *p_data)
 {
-    if (NULL == p_list || NULL == p_data)
-    {
-        return false;
-    }
+	if (NULL == p_stack || NULL == p_data)
+	{
+		return STACK_ERR_NULL;
+	}
 
-    if (0 == p_list->size)
-    {
-        /* Cannot peek an empty list. */
-        return false;
-    }
+	if (0 == p_stack->size)
+	{
+		return STACK_ERR_EMPTY;
+	}
 
-    *p_data = p_list->p_head->data;
+	*p_data = p_stack->p_tos->data;
 
-    return true;
-} /* End of slist_peek_head() */
+	return STACK_OK;
+}
 
 /*!
- * @brief Removes the node at the head of the list and stores its data.
- * @param[in,out] p_list Pointer to the singly linked list.
- * @param[out] p_data Pointer to store the data at the head.
- * @return true If the removal was successful.
- * @return false If p_list is NULL, p_data is NULL, or the list is empty.
+ * @brief Retrieves the number of nodes in the stack.
+ * @param[in] p_stack Pointer to stack object.
+ * @param[out] p_size Pointer to store stack size.
+ * @return STACK_OK on success, error codes otherwise.
  * @note Time complexity: O(1)
  */
-bool slist_remove_head(slist_t *p_list, int *p_data)
+stack_status_t stack_size(const stack_t *p_stack, size_t *p_size)
 {
-    if (NULL == p_list || NULL == p_data)
-    {
-        return false;
-    }
+	if (NULL == p_stack || NULL == p_size)
+	{
+		return STACK_ERR_NULL;
+	}
 
-    if (0 == p_list->size)
-    {
-        /* Cannot remove from an empty list. */
-        return false;
-    }
+	*p_size = p_stack->size;
 
-    slist_node_t * p_remove = p_list->p_head;
-
-    /* Store the data of the current head node being removed. */
-    *p_data = p_remove->data;
-
-    /* Update p_head. */
-    p_list->p_head = p_remove->p_next;
-
-    if (1 == p_list->size)
-    {
-        /* Special case: Clear p_tail when removing the last node to avoid
-         * a dangling pointer. */
-        p_list->p_tail = NULL;
-    }
-
-    p_list->size--;
-    free(p_remove);
-
-    return true;
-} /* End of slist_remove_head() */
+	return STACK_OK;
+}
 
 /*!
- * @brief Checks if the list is empty.
- * @param[in] p_list Pointer to the singly linked list.
- * @return true If the list is empty.
- * @return false If the list is not empty, or p_list is NULL.
- * @note Time complexity: O(1)
- */
-bool slist_is_empty(const slist_t *p_list)
-{
-    if (NULL == p_list)
-    {
-        return false;
-    }
-
-    return (0 == p_list->size);
-} /* End of slist_is_empty() */
-
-/*!
- * @brief Returns the size of the list.
- * @param[in] p_list Pointer to the singly linked list.
- * @return Number of nodes in the list. Returns 0 if p_list is NULL.
- * @note Time complexity: O(1)
- */
-unsigned int slist_size(const slist_t *p_list)
-{
-    if (NULL == p_list)
-    {
-        return 0;
-    }
-
-    return p_list->size;
-} /* End of slist_size() */
-
-/*!
- * @brief Removes all nodes in the list.
- * @param[in,out] p_list Pointer to the singly linked list.
- * @note If p_list is NULL, the function does nothing.
+ * @brief Prints stack content from top to bottom.
+ * @param[in] p_stack Pointer to stack object.
+ * @return STACK_OK on success, error codes otherwise.
  * @note Time complexity: O(n), where n is the number of nodes.
  */
-void slist_clear(slist_t *p_list)
+stack_status_t stack_display(const stack_t *p_stack)
 {
-    if (NULL == p_list)
-    {
-        return;
-    }
+	if (NULL == p_stack)
+	{
+		return STACK_ERR_NULL;
+	}
 
-    slist_node_t *p_remove = p_list->p_head;
+	printf("tos -> ");
 
-    /* Free nodes one by one while advancing the p_head. */
-    while (NULL != p_remove)
-    {
-        p_list->p_head = p_remove->p_next;
-        free(p_remove);
-        p_remove = p_list->p_head;
-    }
+	stack_node_t *p_temp = p_stack->p_tos;
 
-    /* Reset list to empty state. */
-    p_list->p_head = NULL; /* Optional. */
-    p_list->p_tail = NULL;
-    p_list->size = 0;
-} /* End of slist_clear() */
+	while (p_temp != NULL)
+	{
+		printf("%d -> ", p_temp->data);
+		p_temp = p_temp->p_next;
+	}
 
-/*!
- * @brief Displays all nodes in the list.
- * @param[in] p_list Pointer to the singly linked list.
- * @note If p_list is NULL, the function does nothing.
- * @note Time complexity: O(n), where n is the number of nodes.
- */
-void slist_display(slist_t *p_list)
-{
-    if (NULL == p_list)
-    {
-        return;
-    }  
+	printf("null\n");
 
-    slist_node_t *p_curr = p_list->p_head;
-    while (p_curr)
-    {
-        printf("%d -> ", p_curr->data);
-        p_curr = p_curr->p_next; 
-    }
-    printf("NULL\n");
-} /* End of slist_display() */
+	return STACK_OK;
+}
 
-/*** End of file: slist.c */ 
+/* End of file: stack.c */

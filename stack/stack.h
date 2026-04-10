@@ -14,7 +14,6 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include <stdstack_status_t.h>
 #include <stddef.h>
 
 /* Opaque type declarations --------------------------------------------------*/
@@ -27,19 +26,18 @@ typedef enum
     STACK_ERR_EMPTY,
     STACK_ERR_FULL,
     STACK_ERR_NULL,
+	STACK_ERR_MALLOC
 } stack_status_t;
 
 /* Public APIs ---------------------------------------------------------------*/
 
 stack_t* stack_create(void);                              
 stack_status_t stack_destroy(stack_t *p_stack);
-stack_status_t stack_push(stack_t *p_stack, int data);            
+stack_status_t stack_push(stack_t *p_stack, const int data);            
 stack_status_t stack_pop(stack_t *p_stack, int *p_data);            
 stack_status_t stack_peek(const stack_t *p_stack, int *p_data);
-stack_status_t stack_is_empty(const stack_t *p_stack, bool *p_b_is_empty);
 stack_status_t stack_size(const stack_t *p_stack, size_t *p_size);
-stack_status_t stack_clear(stack_t *p_stack);
-stack_status_t stack_display(stack_t *p_stack);
+stack_status_t stack_display(const stack_t *p_stack);
 
 #endif /* STACK_H */
 
